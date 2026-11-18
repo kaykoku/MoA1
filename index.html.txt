@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e3a8a" />
+  <title>대관 예약 관리 시스템 (독립형 PWA)</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-hover: #172554;
+      --primary-light: #eff6ff;
+      --accent: #0f766e;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --success: #15803d;
+      --success-bg: #f0fdf4;
+      --warning: #b45309;
+      --warning-bg: #fffbeb;
+      --radius: 14px;
+      --shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 84px;
+    }
+
+    header.topbar {
+      background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+      color: #fff;
+      padding: 18px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.14);
+    }
+
+    .topbar-inner {
+      max-width: 1060px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      font-size: 0.8rem;
+      opacity: 0.88;
+      margin-top: 2px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.14);
+      padding: 4px;
+      border-radius: 12px;
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 9px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .nav-btn.active {
+      background: #fff;
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+
+    .container {
+      max-width: 1060px;
+      margin: 22px auto;
+      padding: 0 16px;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    @media (max-width: 720px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #1e293b;
+    }
+
+    .req {
+      color: var(--danger);
+      margin-left: 2px;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"],
+    input[type="date"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.15s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+    }
+
+    textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .helper {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    .slot-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+      gap: 8px;
+    }
+
+    .slot-btn {
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: var(--text);
+      padding: 9px 8px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .slot-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .slot-btn.selected {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .slot-btn:disabled {
+      background: #f1f5f9;
+      color: #94a3b8;
+      border-color: #e2e8f0;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+
+    .selected-summary {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 0.86rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .inline-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .check-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 0.86rem;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .check-chip input {
+      width: auto;
+      margin: 0;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+      padding: 7px 12px;
+      font-size: 0.8rem;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+      padding: 7px 12px;
+      font-size: 0.8rem;
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid #cbd5e1;
+      padding: 7px 12px;
+      font-size: 0.8rem;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 720px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .stat-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .stat-val {
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .badge-pending {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+
+    .badge-approved {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .badge-rejected {
+      background: var(--danger-bg);
+      color: var(--danger);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      min-width: 720px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .cell-free {
+      color: #94a3b8;
+    }
+
+    .cell-pending {
+      background: var(--warning-bg);
+      color: var(--warning);
+      font-weight: 700;
+    }
+
+    .cell-approved {
+      background: var(--success-bg);
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .booking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .booking-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .booking-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .booking-title {
+      font-weight: 700;
+      font-size: 0.96rem;
+    }
+
+    .booking-meta {
+      font-size: 0.82rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .booking-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .lock-card {
+      max-width: 400px;
+      margin: 24px auto;
+      text-align: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .pin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      background: transparent;
+      transition: 0.15s ease;
+    }
+
+    .pin-dot.filled {
+      background: var(--primary);
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      max-width: 270px;
+      margin: 14px auto 0;
+    }
+
+    .key-btn {
+      padding: 13px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .key-btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .admin-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <h1>대관 예약 관리 시스템</h1>
+        <p>독립형 PWA · 중복 예약 차단 &amp; 관리자 PIN 잠금</p>
+      </div>
+      <nav class="nav-tabs" aria-label="메인 화면 전환">
+        <button type="button" class="nav-btn active" data-tab="request">예약 신청</button>
+        <button type="button" class="nav-btn" data-tab="admin">🔒 관리자 대시보드</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 1. 예약 신청 화면 -->
+    <section id="view-request" class="view active">
+      <form id="reservation-form">
+        <div class="card">
+          <div class="card-title">
+            <span>1. 공간 · 날짜 · 연속 시간 선택</span>
+            <span class="helper" style="margin:0;">연속된 시간대만 선택할 수 있습니다</span>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="room-select">대관 공간<span class="req">*</span></label>
+              <select id="room-select" required>
+                <option value="메인홀">메인홀</option>
+                <option value="룸2">룸2</option>
+                <option value="룸3">룸3</option>
+                <option value="룸4">룸4</option>
+                <option value="룸5">룸5</option>
+                <option value="룸6">룸6</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="date-input">이용 날짜<span class="req">*</span></label>
+              <input type="date" id="date-input" required />
+            </div>
+          </div>
+
+          <div class="slot-legend">
+            <span class="legend-item"><i class="dot" style="background:#fff; border:1px solid #94a3b8;"></i>예약 가능</span>
+            <span class="legend-item"><i class="dot" style="background:#1e3a8a;"></i>선택됨</span>
+            <span class="legend-item"><i class="dot" style="background:#cbd5e1;"></i>예약 불가(대기/완료)</span>
+          </div>
+
+          <div id="slot-grid" class="slot-grid" role="group" aria-label="시간대 선택"></div>
+
+          <div class="selected-summary">
+            <span id="selected-slot-text">선택된 시간: 없음 (1시간 이상 연속 선택)</span>
+            <button type="button" class="btn btn-outline btn-sm" id="clear-slots-btn">시간 초기화</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span>2. 신청자 및 행사 정보</span></div>
+
+          <div class="grid-3">
+            <div class="form-group">
+              <label for="applicant-name">성명<span class="req">*</span></label>
+              <input type="text" id="applicant-name" placeholder="예: 홍길동" required />
+            </div>
+            <div class="form-group">
+              <label for="applicant-org">소속<span class="req">*</span></label>
+              <input type="text" id="applicant-org" placeholder="예: ○○커뮤니티" required />
+            </div>
+            <div class="form-group">
+              <label for="applicant-phone">연락처<span class="req">*</span></label>
+              <input type="tel" id="applicant-phone" placeholder="예: 010-1234-5678" required />
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="form-group">
+              <label for="applicant-email">이메일<span class="req">*</span></label>
+              <input type="email" id="applicant-email" placeholder="name@example.com" required />
+            </div>
+            <div class="form-group">
+              <label for="event-title">행사명<span class="req">*</span></label>
+              <input type="text" id="event-title" placeholder="예: 정기 세미나" required />
+            </div>
+            <div class="form-group">
+              <label for="attendees">예상 참석 인원<span class="req">*</span></label>
+              <input type="text" id="attendees" placeholder="예: 25명" required />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="event-purpose">대관 목적<span class="req">*</span></label>
+              <input type="text" id="event-purpose" placeholder="예: 워크숍 및 간담회" required />
+            </div>
+            <div class="form-group">
+              <label>행사 공개 여부<span class="req">*</span></label>
+              <div class="inline-options">
+                <label class="check-chip"><input type="radio" name="isPublic" value="오픈" checked /> 오픈</label>
+                <label class="check-chip"><input type="radio" name="isPublic" value="비공개" /> 비공개</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>시설 및 장비 사용 요청</label>
+            <div class="inline-options">
+              <label class="check-chip"><input type="checkbox" name="equip" value="빔프로젝터" /> 빔프로젝터</label>
+              <label class="check-chip"><input type="checkbox" name="equip" value="음향/마이크" /> 음향/마이크</label>
+              <label class="check-chip"><input type="checkbox" name="equip" value="화이트보드" /> 화이트보드</label>
+              <label class="check-chip"><input type="checkbox" name="equip" value="테이블/의자 세팅" /> 테이블/의자 세팅</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="extra-note">기타 추가 요청사항</label>
+            <textarea id="extra-note" placeholder="필요한 세팅이나 문의 사항을 적어주세요."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="check-chip" style="width:100%;">
+              <input type="checkbox" id="agree-rule" required />
+              <span>시설 이용수칙 및 정리정돈, 파손 등에 대한 원상복구 규정에 동의합니다.<span class="req">*</span></span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:13px; font-size:0.98rem;">
+            대관 예약 신청하기
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- 2. 관리자 대시보드 화면 -->
+    <section id="view-admin" class="view">
+      <div id="admin-lock-screen" class="lock-card">
+        <h2 style="font-size:1.15rem; font-weight:800;">관리자 인증</h2>
+        <p class="helper" style="margin-top:6px;">
+          비밀번호(PIN)를 입력하세요. (기본 PIN: <strong>1234</strong>)
+        </p>
+
+        <div class="pin-dots" id="pin-dots" aria-hidden="true">
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+          <span class="pin-dot"></span>
+        </div>
+
+        <input
+          type="password"
+          id="pin-input"
+          inputmode="numeric"
+          maxlength="8"
+          placeholder="PIN 4~8자리 입력"
+          style="text-align:center; letter-spacing:4px; max-width:240px; margin:0 auto 8px; display:block;"
+        />
+        <button type="button" class="btn btn-primary" id="pin-unlock-btn" style="max-width:240px; width:100%;">
+          잠금 해제
+        </button>
+
+        <div class="keypad">
+          <button type="button" class="key-btn" data-key="1">1</button>
+          <button type="button" class="key-btn" data-key="2">2</button>
+          <button type="button" class="key-btn" data-key="3">3</button>
+          <button type="button" class="key-btn" data-key="4">4</button>
+          <button type="button" class="key-btn" data-key="5">5</button>
+          <button type="button" class="key-btn" data-key="6">6</button>
+          <button type="button" class="key-btn" data-key="7">7</button>
+          <button type="button" class="key-btn" data-key="8">8</button>
+          <button type="button" class="key-btn" data-key="9">9</button>
+          <button type="button" class="key-btn" data-key="clear">지움</button>
+          <button type="button" class="key-btn" data-key="0">0</button>
+          <button type="button" class="key-btn" data-key="ok">확인</button>
+        </div>
+      </div>
+
+      <div id="admin-content" style="display:none;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:0;">
+            <span>관리자 제어 바</span>
+            <div class="admin-toolbar">
+              <button type="button" class="btn btn-outline" id="change-pin-btn">🔑 비밀번호 변경</button>
+              <button type="button" class="btn btn-outline" id="lock-now-btn">🔒 화면 잠금</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">전체 접수</div>
+            <div class="stat-val" id="stat-total">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">승인 대기</div>
+            <div class="stat-val" style="color:var(--warning);" id="stat-pending">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">승인 완료</div>
+            <div class="stat-val" style="color:var(--success);" id="stat-approved">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">반려/취소</div>
+            <div class="stat-val" style="color:var(--danger);" id="stat-rejected">0</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>6개 공간 일일 전체 현황표</span>
+            <input type="date" id="admin-date-filter" style="width:auto;" />
+          </div>
+          <div class="table-wrap">
+            <table id="timetable"></table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>예약 신청 목록</span>
+            <select id="status-filter" style="width:auto;">
+              <option value="ALL">전체 상태</option>
+              <option value="PENDING">승인 대기</option>
+              <option value="APPROVED">승인 완료</option>
+              <option value="REJECTED">반려/취소</option>
+            </select>
+          </div>
+          <div id="booking-list" class="booking-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      const ROOMS = ["메인홀", "룸2", "룸3", "룸4", "룸5", "룸6"];
+      const HOURS = Array.from({ length: 15 }, (_, idx) => idx + 9);
+      const STORAGE_BOOKINGS = "room_pwa_bookings_v1";
+      const STORAGE_PIN = "room_pwa_admin_pin_v1";
+      const STORAGE_UNLOCKED = "room_pwa_admin_unlocked_v1";
+
+      let selectedIndices = [];
+      let isAdminUnlocked = sessionStorage.getItem(STORAGE_UNLOCKED) === "true";
+
+      function formatHourSlot(h) {
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${pad(h)}:00 ~ ${pad(h + 1)}:00`;
+      }
+
+      function getTodayStr() {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+        const d = String(now.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      function showToast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => el.classList.remove("show"), 2600);
+      }
+
+      function loadBookings() {
+        try {
+          const raw = localStorage.getItem(STORAGE_BOOKINGS);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        const today = getTodayStr();
+        const initial = [
+          {
+            id: "seed-1",
+            room: "메인홀",
+            date: today,
+            slotIndices: [1, 2],
+            slots: [formatHourSlot(10), formatHourSlot(11)],
+            name: "김민수",
+            org: "대전창업모임",
+            phone: "010-2222-3333",
+            email: "minsu@example.com",
+            title: "주간 네트워킹",
+            attendees: "30명",
+            purpose: "멤버 교류회",
+            isPublic: "오픈",
+            equip: ["빔프로젝터", "음향/마이크"],
+            note: "10분 전 입장 예정",
+            status: "APPROVED",
+            createdAt: new Date().toISOString()
+          }
+        ];
+        saveBookings(initial);
+        return initial;
+      }
+
+      function saveBookings(list) {
+        localStorage.setItem(STORAGE_BOOKINGS, JSON.stringify(list));
+      }
+
+      function getAdminPin() {
+        return localStorage.getItem(STORAGE_PIN) || "1234";
+      }
+
+      function setAdminPin(newPin) {
+        localStorage.setItem(STORAGE_PIN, newPin);
+      }
+
+      function isSlotBlocked(bookings, room, date, slotIndex, excludeId = null) {
+        return bookings.some(
+          (b) =>
+            b.id !== excludeId &&
+            b.room === room &&
+            b.date === date &&
+            (b.status === "PENDING" || b.status === "APPROVED") &&
+            Array.isArray(b.slotIndices) &&
+            b.slotIndices.includes(slotIndex)
+        );
+      }
+
+      function isConsecutive(arr) {
+        if (!arr.length) return true;
+        const sorted = [...arr].sort((a, b) => a - b);
+        for (let i = 1; i < sorted.length; i++) {
+          if (sorted[i] !== sorted[i - 1] + 1) return false;
+        }
+        return true;
+      }
+
+      function renderSlots() {
+        const room = document.getElementById("room-select").value;
+        const date = document.getElementById("date-input").value;
+        const grid = document.getElementById("slot-grid");
+        const bookings = loadBookings();
+
+        selectedIndices = selectedIndices.filter((idx) => !isSlotBlocked(bookings, room, date, idx));
+        if (!isConsecutive(selectedIndices)) {
+          selectedIndices = [];
+        }
+
+        grid.innerHTML = "";
+        HOURS.forEach((h, idx) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "slot-btn";
+          btn.textContent = formatHourSlot(h);
+          const blocked = isSlotBlocked(bookings, room, date, idx);
+          const isSel = selectedIndices.includes(idx);
+
+          if (blocked) btn.disabled = true;
+          if (isSel) btn.classList.add("selected");
+
+          btn.addEventListener("click", () => {
+            if (blocked) return;
+            if (selectedIndices.includes(idx)) {
+              const candidate = selectedIndices.filter((item) => item !== idx);
+              if (!isConsecutive(candidate)) {
+                showToast("중간 시간만 빼면 연속 시간이 끊깁니다. 양끝부터 해제하세요.");
+                return;
+              }
+              selectedIndices = candidate;
+            } else {
+              const candidate = [...selectedIndices, idx].sort((a, b) => a - b);
+              if (!isConsecutive(candidate)) {
+                showToast("연속된 시간대만 선택할 수 있습니다.");
+                return;
+              }
+              selectedIndices = candidate;
+            }
+            renderSlots();
+          });
+
+          grid.appendChild(btn);
+        });
+
+        const summary = document.getElementById("selected-slot-text");
+        if (!selectedIndices.length) {
+          summary.textContent = "선택된 시간: 없음 (1시간 이상 연속 선택)";
+        } else {
+          const sorted = [...selectedIndices].sort((a, b) => a - b);
+          const startStr = formatHourSlot(HOURS[sorted[0]]).split(" ~ ")[0];
+          const endStr = formatHourSlot(HOURS[sorted[sorted.length - 1]]).split(" ~ ")[1];
+          summary.textContent = `선택된 시간: ${startStr} ~ ${endStr} (${sorted.length}시간 연속)`;
+        }
+      }
+
+      function syncAdminView() {
+        const lockScreen = document.getElementById("admin-lock-screen");
+        const content = document.getElementById("admin-content");
+        if (isAdminUnlocked) {
+          lockScreen.style.display = "none";
+          content.style.display = "block";
+          renderAdmin();
+        } else {
+          lockScreen.style.display = "block";
+          content.style.display = "none";
+          updatePinDots("");
+          document.getElementById("pin-input").value = "";
+        }
+      }
+
+      function updatePinDots(val) {
+        const dots = document.querySelectorAll("#pin-dots .pin-dot");
+        dots.forEach((dot, i) => {
+          dot.classList.toggle("filled", i < val.length);
+        });
+      }
+
+      function attemptUnlock() {
+        const input = document.getElementById("pin-input");
+        const entered = input.value.trim();
+        if (entered === getAdminPin()) {
+          isAdminUnlocked = true;
+          sessionStorage.setItem(STORAGE_UNLOCKED, "true");
+          showToast("관리자 대시보드가 열렸습니다.");
+          syncAdminView();
+        } else {
+          showToast("비밀번호(PIN)가 일치하지 않습니다.");
+          input.value = "";
+          updatePinDots("");
+          input.focus();
+        }
+      }
+
+      function renderAdmin() {
+        const bookings = loadBookings();
+        const targetDate = document.getElementById("admin-date-filter").value || getTodayStr();
+        const statusFilter = document.getElementById("status-filter").value;
+
+        document.getElementById("stat-total").textContent = bookings.length;
+        document.getElementById("stat-pending").textContent = bookings.filter((b) => b.status === "PENDING").length;
+        document.getElementById("stat-approved").textContent = bookings.filter((b) => b.status === "APPROVED").length;
+        document.getElementById("stat-rejected").textContent = bookings.filter((b) => b.status === "REJECTED").length;
+
+        const table = document.getElementById("timetable");
+        let thead = "<thead><tr><th>시간</th>" + ROOMS.map((r) => `<th>${r}</th>`).join("") + "</tr></thead>";
+        let tbody = "<tbody>";
+        HOURS.forEach((h, idx) => {
+          tbody += `<tr><td><strong>${formatHourSlot(h)}</strong></td>`;
+          ROOMS.forEach((room) => {
+            const hit = bookings.find(
+              (b) =>
+                b.room === room &&
+                b.date === targetDate &&
+                (b.status === "PENDING" || b.status === "APPROVED") &&
+                Array.isArray(b.slotIndices) &&
+                b.slotIndices.includes(idx)
+            );
+            if (!hit) {
+              tbody += `<td class="cell-free">가능</td>`;
+            } else if (hit.status === "APPROVED") {
+              tbody += `<td class="cell-approved">[완료] ${hit.title}</td>`;
+            } else {
+              tbody += `<td class="cell-pending">[대기] ${hit.title}</td>`;
+            }
+          });
+          tbody += "</tr>";
+        });
+        tbody += "</tbody>";
+        table.innerHTML = thead + tbody;
+
+        const listEl = document.getElementById("booking-list");
+        const filtered = bookings.filter((b) => statusFilter === "ALL" || b.status === statusFilter);
+
+        if (!filtered.length) {
+          listEl.innerHTML = `<p class="helper">표시할 예약 신청 내역이 없습니다.</p>`;
+          return;
+        }
+
+        const statusBadge = (st) => {
+          if (st === "APPROVED") return `<span class="badge badge-approved">승인 완료</span>`;
+          if (st === "REJECTED") return `<span class="badge badge-rejected">반려/취소</span>`;
+          return `<span class="badge badge-pending">승인 대기</span>`;
+        };
+
+        listEl.innerHTML = filtered
+          .map((b) => {
+            const sorted = [...(b.slotIndices || [])].sort((a, c) => a - c);
+            const timeLabel = sorted.length
+              ? `${formatHourSlot(HOURS[sorted[0]]).split(" ~ ")[0]} ~ ${formatHourSlot(HOURS[sorted[sorted.length - 1]]).split(" ~ ")[1]}`
+              : (b.slots || []).join(", ");
+
+            return `
+              <div class="booking-item">
+                <div class="booking-top">
+                  <div>
+                    <div class="booking-title">${escapeHtml(b.title)} · <span style="color:var(--primary);">${escapeHtml(b.room)}</span></div>
+                    <div class="booking-meta">
+                      <span>📅 ${escapeHtml(b.date)}</span>
+                      <span>⏰ ${escapeHtml(timeLabel)}</span>
+                      <span>👤 ${escapeHtml(b.name)} (${escapeHtml(b.org)})</span>
+                      <span>📞 ${escapeHtml(b.phone)}</span>
+                      <span>✉️ ${escapeHtml(b.email)}</span>
+                      <span>👥 ${escapeHtml(b.attendees)}</span>
+                      <span>🔓 ${escapeHtml(b.isPublic)}</span>
+                    </div>
+                  </div>
+                  ${statusBadge(b.status)}
+                </div>
+                <div class="helper" style="color:#334155;">
+                  <strong>목적:</strong> ${escapeHtml(b.purpose)}
+                  ${b.equip && b.equip.length ? ` · <strong>장비:</strong> ${escapeHtml(b.equip.join(", "))}` : ""}
+                  ${b.note ? ` · <strong>비고:</strong> ${escapeHtml(b.note)}` : ""}
+                </div>
+                <div class="booking-actions">
+                  ${b.status !== "APPROVED" ? `<button type="button" class="btn btn-success" data-action="approve" data-id="${b.id}">✓ 승인 완료</button>` : ""}
+                  ${b.status !== "REJECTED" ? `<button type="button" class="btn btn-danger" data-action="reject" data-id="${b.id}">✕ 반려/취소</button>` : ""}
+                  <button type="button" class="btn btn-outline" data-action="delete" data-id="${b.id}">삭제</button>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function escapeHtml(str) {
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      document.querySelectorAll(".nav-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const tab = btn.dataset.tab;
+          document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b === btn));
+          document.getElementById("view-request").classList.toggle("active", tab === "request");
+          document.getElementById("view-admin").classList.toggle("active", tab === "admin");
+          if (tab === "request") {
+            renderSlots();
+          } else {
+            syncAdminView();
+          }
+        });
+      });
+
+      document.getElementById("room-select").addEventListener("change", () => {
+        selectedIndices = [];
+        renderSlots();
+      });
+
+      document.getElementById("date-input").addEventListener("change", () => {
+        selectedIndices = [];
+        renderSlots();
+      });
+
+      document.getElementById("clear-slots-btn").addEventListener("click", () => {
+        selectedIndices = [];
+        renderSlots();
+      });
+
+      document.getElementById("reservation-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const room = document.getElementById("room-select").value;
+        const date = document.getElementById("date-input").value;
+
+        if (!selectedIndices.length) {
+          showToast("이용할 시간대를 1시간 이상 선택해 주세요.");
+          return;
+        }
+        if (!isConsecutive(selectedIndices)) {
+          showToast("연속된 시간대만 예약할 수 있습니다.");
+          return;
+        }
+
+        const bookings = loadBookings();
+        const hasConflict = selectedIndices.some((idx) => isSlotBlocked(bookings, room, date, idx));
+        if (hasConflict) {
+          showToast("선택한 시간 중 이미 예약된 구간이 있습니다.");
+          renderSlots();
+          return;
+        }
+
+        const sorted = [...selectedIndices].sort((a, b) => a - b);
+        const equip = Array.from(document.querySelectorAll('input[name="equip"]:checked')).map((el) => el.value);
+        const isPublic = document.querySelector('input[name="isPublic"]:checked').value;
+
+        const newItem = {
+          id: "bk-" + Date.now(),
+          room,
+          date,
+          slotIndices: sorted,
+          slots: sorted.map((idx) => formatHourSlot(HOURS[idx])),
+          name: document.getElementById("applicant-name").value.trim(),
+          org: document.getElementById("applicant-org").value.trim(),
+          phone: document.getElementById("applicant-phone").value.trim(),
+          email: document.getElementById("applicant-email").value.trim(),
+          title: document.getElementById("event-title").value.trim(),
+          attendees: document.getElementById("attendees").value.trim(),
+          purpose: document.getElementById("event-purpose").value.trim(),
+          isPublic,
+          equip,
+          note: document.getElementById("extra-note").value.trim(),
+          status: "PENDING",
+          createdAt: new Date().toISOString()
+        };
+
+        bookings.unshift(newItem);
+        saveBookings(bookings);
+        selectedIndices = [];
+        e.target.reset();
+        document.getElementById("room-select").value = room;
+        document.getElementById("date-input").value = date;
+        renderSlots();
+        showToast("예약 신청이 접수되었습니다. (승인 대기)");
+      });
+
+      const pinInput = document.getElementById("pin-input");
+      pinInput.addEventListener("input", () => updatePinDots(pinInput.value));
+      pinInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          attemptUnlock();
+        }
+      });
+
+      document.getElementById("pin-unlock-btn").addEventListener("click", attemptUnlock);
+
+      document.querySelectorAll(".key-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const k = btn.dataset.key;
+          if (k === "clear") {
+            pinInput.value = "";
+            updatePinDots("");
+          } else if (k === "ok") {
+            attemptUnlock();
+          } else if (pinInput.value.length < 8) {
+            pinInput.value += k;
+            updatePinDots(pinInput.value);
+          }
+        });
+      });
+
+      document.getElementById("lock-now-btn").addEventListener("click", () => {
+        isAdminUnlocked = false;
+        sessionStorage.removeItem(STORAGE_UNLOCKED);
+        syncAdminView();
+        showToast("관리자 화면이 잠겼습니다.");
+      });
+
+      document.getElementById("change-pin-btn").addEventListener("click", () => {
+        const nextPin = prompt("새 관리자 PIN(숫자 4~8자리)을 입력하세요:");
+        if (nextPin === null) return;
+        const trimmed = nextPin.trim();
+        if (!/^\d{4,8}$/.test(trimmed)) {
+          showToast("숫자 4~8자리로 입력해 주세요.");
+          return;
+        }
+        setAdminPin(trimmed);
+        showToast("관리자 PIN이 변경되었습니다.");
+      });
+
+      document.getElementById("admin-date-filter").addEventListener("change", renderAdmin);
+      document.getElementById("status-filter").addEventListener("change", renderAdmin);
+
+      document.getElementById("booking-list").addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        let bookings = loadBookings();
+        const target = bookings.find((b) => b.id === id);
+        if (!target) return;
+
+        if (action === "approve") {
+          const conflict = bookings.some(
+            (other) =>
+              other.id !== target.id &&
+              other.room === target.room &&
+              other.date === target.date &&
+              other.status === "APPROVED" &&
+              other.slotIndices.some((idx) => target.slotIndices.includes(idx))
+          );
+          if (conflict) {
+            showToast("이미 승인 완료된 일정과 시간이 겹쳐 승인할 수 없습니다.");
+            return;
+          }
+          target.status = "APPROVED";
+          showToast("예약이 승인 완료 처리되었습니다.");
+        } else if (action === "reject") {
+          target.status = "REJECTED";
+          showToast("예약이 반려 처리되어 해당 시간대가 열렸습니다.");
+        } else if (action === "delete") {
+          if (!confirm("이 예약 내역을 완전히 삭제할까요?")) return;
+          bookings = bookings.filter((b) => b.id !== id);
+          showToast("예약 내역이 삭제되었습니다.");
+        }
+
+        saveBookings(bookings);
+        renderAdmin();
+        renderSlots();
+      });
+
+      if ("https:" === location.protocol) {
+        const manifestObj = {
+          name: "대관 예약 관리 시스템",
+          short_name: "대관예약",
+          start_url: ".",
+          display: "standalone",
+          background_color: "#f1f5f9",
+          theme_color: "#1e3a8a"
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: "application/manifest+json" });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        const link = document.createElement("link");
+        link.rel = "manifest";
+        link.href = manifestUrl;
+        document.head.appendChild(link);
+
+        if ("serviceWorker" in navigator) {
+          const swCode = `
+            self.addEventListener("install", (e) => self.skipWaiting());
+            self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+            self.addEventListener("fetch", (e) => {
+              e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+            });
+          `;
+          const swBlob = new Blob([swCode], { type: "application/javascript" });
+          const swUrl = URL.createObjectURL(swBlob);
+          navigator.serviceWorker.register(swUrl).catch(() => {});
+        }
+      }
+
+      const today = getTodayStr();
+      document.getElementById("date-input").value = today;
+      document.getElementById("admin-date-filter").value = today;
+      renderSlots();
+    })();
+  </script>
+</body>
+</html>
